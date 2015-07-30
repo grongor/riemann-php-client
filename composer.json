@@ -1,12 +1,11 @@
 {
-    "name": "schnipseljagd/riemann-php-client",
+    "name": "grongor/riemann-php-client",
     "type": "library",
     "description": "A php client for the Riemann event system",
     "keywords": ["riemann", "metric", "event"],
     "homepage": "http://riemann.io/",
     "require": {
-        "rgooding/protobuf-php": "dev-master",
-        "ebuzzing/thrift": "dev-master"
+        "rgooding/protobuf-php": "dev-master#d688d7894d65d80a38846e0b622b9a2cd7fd4d68"
     },
     "require-dev": {
         "phpunit/phpunit": "@stable"
@@ -21,6 +20,10 @@
         {
             "name": "Joscha",
             "email": "joscha@schnipseljagd.org"
+        },
+        {
+            "name": "Jakub Chábek",
+            "email": "jakub.chabek@heureka.cz"
         }
     ]
 }

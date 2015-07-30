@@ -11,11 +11,6 @@ class EventBuilder
     private $service;
     private $metric = 1;
 
-    /**
-     * @var Client
-     */
-    private $client;
-
     public function __construct(
         DateTimeProvider $dateTimeProvider,
         $host,
@@ -66,13 +61,4 @@ class EventBuilder
         return $event;
     }
 
-    public function setClient(Client $client)
-    {
-        $this->client = $client;
-    }
-
-    public function sendEvent()
-    {
-        $this->client->sendEvent($this->build());
-    }
 }

@@ -1,51 +1,77 @@
 <?php
+
 namespace Riemann;
 
 use DrSlump\Protobuf;
-use Thrift\Transport\TSocket;
 
 class Client
 {
+
     /**
      * @var Event[]
      */
     private $events;
 
+    /**
+     * @var Socket
+     */
+    private $socket;
+
+    /**
+     * @var EventBuilderFactory
+     */
     private $eventBuilderFactory;
 
-    public function __construct(TSocket $socketClient, EventBuilderFactory $eventBuilderFactory)
+    /**
+     * @param Socket              $socket
+     * @param EventBuilderFactory $eventBuilderFactory
+     */
+    public function __construct(Socket $socket, EventBuilderFactory $eventBuilderFactory)
     {
-        $this->socketClient = $socketClient;
+        $this->socket = $socket;
         $this->eventBuilderFactory = $eventBuilderFactory;
     }
 
-    public static function create($host, $port, $persist = false)
+    /**
+     * @param string $host
+     * @param int    $port
+     * @param bool   $persistent
+     *
+     * @return Client
+     */
+    public static function create($host, $port, $persistent = false)
     {
-        return new self(
-            new TSocket("udp://$host", $port, $persist),
-            new EventBuilderFactory()
-        );
+        return new self(new Socket($host, $port, $persistent), new EventBuilderFactory());
     }
 
+    /**
+     * @return EventBuilder
+     */
     public function getEventBuilder()
     {
-        $builder = $this->eventBuilderFactory->create();
-        $builder->setClient($this);
-        return $builder;
+        return $this->eventBuilderFactory->create();
     }
 
-    public function sendEvent(Event $event)
+    /**
+     * @param Event $event
+     */
+    public function addEvent(Event $event)
     {
         $this->events[] = $event;
     }
 
     public function flush()
     {
+        if (!$this->events) {
+            return;
+        }
+
         $message = new Msg();
         $message->ok = true;
         $message->events = $this->events;
-        $this->socketClient->open();
-        $this->socketClient->write(Protobuf::encode($message));
-        $this->socketClient->close();
+
+        $this->socket->write(Protobuf::encode($message));
+
+        $this->events = [];
     }
 }

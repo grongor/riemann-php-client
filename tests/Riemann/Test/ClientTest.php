@@ -14,18 +14,11 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function itShouldSendMessage()
+    public function itShouldNotSendAnything()
     {
-        $message = $this->aMessage();
-
         $socketClient = $this->socketClientMock();
-        $socketClient->expects($this->at(0))
-            ->method('open');
-        $socketClient->expects($this->at(1))
-            ->method('write')
-            ->with(Protobuf::encode($message));
-        $socketClient->expects($this->at(2))
-            ->method('close');
+        $socketClient->expects($this->never())
+            ->method('write');
         $client = new Client($socketClient, $this->eventBuilderFactoryMock());
         $client->flush();
     }
@@ -49,20 +42,17 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->method('write')
             ->with(Protobuf::encode($message));
         $client = new Client($socketClient, $this->eventBuilderFactoryMock());
-        $client->sendEvent($anEvent);
-        $client->sendEvent($anotherEvent);
+        $client->addEvent($anEvent);
+        $client->addEvent($anotherEvent);
         $client->flush();
     }
-    
+
     /**
      * @test
      */
     public function itShouldReturnANewEventBuilder()
     {
         $eventBuilder = $this->eventBuilderMock();
-        $eventBuilder->expects($this->once())
-            ->method('setClient')
-            ->with($this->isInstanceOf('Riemann\Client'));
         $eventBuilderFactory = $this->eventBuilderFactoryMock();
         $eventBuilderFactory->expects($this->once())
             ->method('create')
@@ -77,7 +67,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     private function socketClientMock()
     {
-        return $this->getMock('Thrift\Transport\TSocket');
+        return $this->getMockBuilder('Riemann\Socket')
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     private function aMessage($events = array())

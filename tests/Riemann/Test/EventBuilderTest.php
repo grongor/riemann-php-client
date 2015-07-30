@@ -29,39 +29,6 @@ class EventBuilderTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-
-    /**
-     * @test
-     */
-    public function itShouldSendBuiltEventToClient()
-    {
-        $service = self::SOME_SERVICE;
-        $metric = self::A_INT_METRIC;
-        $tag = self::A_TAG;
-
-        $this->eventBuilder
-            ->setService($service)
-            ->setMetric($metric)
-            ->addTag($tag);
-
-        $expectedEvent = new Event();
-        $expectedEvent->service = $service;
-        $expectedEvent->time = self::CURRENT_TIMESTAMP;
-        $expectedEvent->metric_sint64 = $metric;
-        $expectedEvent->metric_f = $metric;
-        $expectedEvent->tags = array($tag);
-        $expectedEvent->host = self::A_HOST;
-
-        $clientMock = $this->getMockBuilder('Riemann\Client')
-            ->disableOriginalConstructor()
-            ->getMock();
-        $clientMock->expects($this->once())
-            ->method('sendEvent')
-            ->with($this->equalTo($expectedEvent));
-        $this->eventBuilder->setClient($clientMock);
-        $this->eventBuilder->sendEvent();
-    }
-
     /**
      * @test
      * @expectedException \RuntimeException
