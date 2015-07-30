@@ -36,12 +36,13 @@ class Client
      * @param string $host
      * @param int    $port
      * @param bool   $persistent
+     * @param bool   $useTCP
      *
      * @return Client
      */
-    public static function create($host, $port, $persistent = false)
+    public static function create($host, $port, $persistent = false, $useTCP = true)
     {
-        return new self(new Socket($host, $port, $persistent), new EventBuilderFactory());
+        return new self(new Socket($host, $port, $persistent, $useTCP), new EventBuilderFactory());
     }
 
     /**
