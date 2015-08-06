@@ -1,10 +1,12 @@
 <?php
+
 namespace Riemann;
 
 use DrSlump\Protobuf\AnnotatedMessage;
 
 class Event extends AnnotatedMessage
 {
+
     /** @protobuf(tag=1, type=int64, optional) */
     public $time;
 
@@ -37,4 +39,30 @@ class Event extends AnnotatedMessage
 
     /** @protobuf(tag=15, type=float, optional) */
     public $metric_f;
+
+    /**
+     * @param string|null $data
+     */
+    public function __construct($data = null)
+    {
+        $this->time = time();
+        $this->host = php_uname('n');
+
+        parent::__construct($data);
+    }
+
+    /**
+     * @param int|float $metric
+     */
+    public function setMetric($metric)
+    {
+        $floatMetric = (float)$metric;
+        $this->metric_f = $floatMetric;
+        if (is_int($metric)) {
+            $this->metric_sint64 = $metric;
+        } else {
+            $this->metric_d = $floatMetric;
+        }
+    }
+
 }

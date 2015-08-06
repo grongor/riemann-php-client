@@ -31,7 +31,7 @@ class Socket
      * @param bool $persistent
      * @param bool $useTCP
      */
-    public function __construct($host, $port, $persistent = false, $useTCP = true)
+    public function __construct($host = 'localhost', $port = 5555, $persistent = false, $useTCP = true)
     {
         $this->host = $host;
         $this->port = $port;

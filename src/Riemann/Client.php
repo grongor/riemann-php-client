@@ -18,45 +18,31 @@ class Client
     private $socket;
 
     /**
-     * @var EventBuilderFactory
+     * @param Socket $socket
      */
-    private $eventBuilderFactory;
-
-    /**
-     * @param Socket              $socket
-     * @param EventBuilderFactory $eventBuilderFactory
-     */
-    public function __construct(Socket $socket, EventBuilderFactory $eventBuilderFactory)
+    public function __construct(Socket $socket)
     {
         $this->socket = $socket;
-        $this->eventBuilderFactory = $eventBuilderFactory;
-    }
-
-    /**
-     * @param string $host
-     * @param int    $port
-     * @param bool   $persistent
-     * @param bool   $useTCP
-     *
-     * @return Client
-     */
-    public static function create($host, $port, $persistent = false, $useTCP = true)
-    {
-        return new self(new Socket($host, $port, $persistent, $useTCP), new EventBuilderFactory());
-    }
-
-    /**
-     * @return EventBuilder
-     */
-    public function getEventBuilder()
-    {
-        return $this->eventBuilderFactory->create();
     }
 
     /**
      * @param Event $event
      */
-    public function addEvent(Event $event)
+    public function sendEvent(Event $event)
+    {
+        $queue = $this->events;
+        $this->events = [];
+
+        $this->queueEvent($event);
+        $this->flush();
+
+        $this->events = $queue;
+    }
+
+    /**
+     * @param Event $event
+     */
+    public function queueEvent(Event $event)
     {
         $this->events[] = $event;
     }

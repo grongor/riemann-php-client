@@ -1,10 +1,12 @@
 <?php
+
 namespace Riemann;
 
 use DrSlump\Protobuf\AnnotatedMessage;
 
 class Msg extends AnnotatedMessage
 {
+
     /** @protobuf(tag=2, type=bool, optional) */
     public $ok;
 
@@ -19,4 +21,5 @@ class Msg extends AnnotatedMessage
 
     /** @protobuf(tag=6, type=message, reference=Riemann\Event, repeated) */
     public $events;
+
 }

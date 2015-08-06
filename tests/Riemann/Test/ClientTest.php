@@ -1,15 +1,15 @@
 <?php
+
 namespace Riemann\Test;
 
 use DrSlump\Protobuf;
 use Riemann\Client;
 use Riemann\Event;
 use Riemann\Msg;
+use Riemann\Socket;
 
 class ClientTest extends \PHPUnit_Framework_TestCase
 {
-    const A_HOST = 'localhost';
-    const A_PORT = 5555;
 
     /**
      * @test
@@ -19,7 +19,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $socketClient = $this->socketClientMock();
         $socketClient->expects($this->never())
             ->method('write');
-        $client = new Client($socketClient, $this->eventBuilderFactoryMock());
+
+        $client = new Client($socketClient);
         $client->flush();
     }
 
@@ -30,67 +31,58 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $anEvent = new Event();
         $anotherEvent = new Event();
-        $message = $this->aMessage(
-            array(
-                $anEvent,
-                $anotherEvent,
-            )
-        );
+        $message = $this->getMessage([$anEvent, $anotherEvent]);
 
         $socketClient = $this->socketClientMock();
         $socketClient->expects($this->once())
             ->method('write')
             ->with(Protobuf::encode($message));
-        $client = new Client($socketClient, $this->eventBuilderFactoryMock());
-        $client->addEvent($anEvent);
-        $client->addEvent($anotherEvent);
+
+        $client = new Client($socketClient);
+        $client->queueEvent($anEvent);
+        $client->queueEvent($anotherEvent);
         $client->flush();
     }
 
     /**
      * @test
      */
-    public function itShouldReturnANewEventBuilder()
+    public function itShouldSendEventImmediately()
     {
-        $eventBuilder = $this->eventBuilderMock();
-        $eventBuilderFactory = $this->eventBuilderFactoryMock();
-        $eventBuilderFactory->expects($this->once())
-            ->method('create')
-            ->will($this->returnValue($eventBuilder));
-        $client = new Client($this->socketClientMock(), $eventBuilderFactory);
+        $anEvent = new Event();
+        $anotherEvent = new Event();
+        $thirdEvent = new Event();
 
-        $this->assertThat(
-            $client->getEventBuilder(),
-            $this->equalTo($eventBuilder)
-        );
+        $socketClient = $this->socketClientMock();
+        $socketClient->expects($this->at(0))
+                     ->method('write')
+                     ->with(Protobuf::encode($this->getMessage([$thirdEvent])));
+        $socketClient->expects($this->at(1))
+                     ->method('write')
+                     ->with(Protobuf::encode($this->getMessage([$anEvent, $anotherEvent])));
+
+        $client = new Client($socketClient);
+        $client->queueEvent($anEvent);
+        $client->queueEvent($anotherEvent);
+        $client->sendEvent($thirdEvent);
+        $client->flush();
     }
 
+    /**
+     * @return Socket|\PHPUnit_Framework_MockObject_MockObject
+     */
     private function socketClientMock()
     {
-        return $this->getMockBuilder('Riemann\Socket')
-            ->disableOriginalConstructor()
-            ->getMock();
+        return $this->getMock(Socket::class);
     }
 
-    private function aMessage($events = array())
+    private function getMessage($events = [])
     {
         $message = new Msg();
         $message->ok = true;
         $message->events = $events;
+
         return $message;
     }
 
-    private function eventBuilderFactoryMock()
-    {
-        return $this->getMockBuilder('Riemann\EventBuilderFactory')
-            ->disableOriginalConstructor()
-            ->getMock();
-    }
-
-    private function eventBuilderMock()
-    {
-        return $this->getMockBuilder('Riemann\EventBuilder')
-            ->disableOriginalConstructor()
-            ->getMock();
-    }
 }
