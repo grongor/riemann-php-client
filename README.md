@@ -1,36 +1,42 @@
 riemann-php-client
 ==================
 
-[![Build Status](https://travis-ci.org/schnipseljagd/riemann-php-client.png?branch=master)](https://travis-ci.org/schnipseljagd/riemann-php-client)
+[![Build Status](https://travis-ci.org/grongor/riemann-php-client.png)](https://travis-ci.org/grongor/riemann-php-client)
 
 http://riemann.io/quickstart.html
 
-Uses thrift socket transport atm, but there is no real need for this dependency.
-
-example client
+Example client usage:
 ```php
 use Riemann\Client;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$riemannClient = Client::create('localhost', 5555);
+$riemannClient = new Client(new Socket());
 
-$eventBuilder = $riemannClient->getEventBuilder();
-$eventBuilder->setService("php stuff");
-$eventBuilder->setMetric(mt_rand(0, 99));
-$eventBuilder->addTag('histogram');
-$eventBuilder->sendEvent();
+$event = new Event();
+$event->service = 'php stuff';
+$event->setMetric(mt_rand(0, 99));
+$event->tags = ['some', 'tags'];
 
-$eventBuilder = $riemannClient->getEventBuilder();
-$eventBuilder->setService("php stuff2");
-$eventBuilder->setMetric(mt_rand(99, 199));
-$eventBuilder->addTag('meter');
-$eventBuilder->sendEvent();
+$riemannClient->queueEvent($event);
+
+$event = new Event();
+$event->service = 'some more stuff';
+$event->setMetric(mt_rand(0, 99));
+$event->tags = ['another-tag'];
+
+$riemannClient->queueEvent($event);
+
+$event = new Event();
+$event->service = 'stuff that skips the queue';
+$event->setMetric(mt_rand(0, 99));
+
+$riemannClient->sendEvent($event); // goes before the first two events
 
 $riemannClient->flush();
 ```
 
-query the events:
+Query the events:
 ```ruby
 $ irb -r riemann/client
 ruby-1.9.3 :001 > r = Riemann::Client.new
